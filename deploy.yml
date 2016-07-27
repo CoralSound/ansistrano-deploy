@@ -1,0 +1,36 @@
+---
+- hosts: "{{ hosts }}"
+# - hosts: web-magento-servers
+# - hosts: magento-throwaway-servers
+  # become: no
+  # become_method: sudo
+
+  vars_files:
+    - vars/carlosbuenosvinos.ansistrano-deploy/main.yml
+
+  vars:
+    code_directory: /home/vagrant/sites_local/www.magentopm.dev/magento2/current
+
+  roles:
+    # - x-magento2-existing
+    - role: carlosbuenosvinos.ansistrano-deploy
+      become: no
+    # - role: x-magento2-syncdb
+
+  pre_tasks:
+
+  - name: Ensures composer home directory exists
+    become: no
+    file: path=.composer state=directory
+
+  - name: auth.json
+    become: no
+    template: src=templates/.composer/auth.json.j2 dest=.composer/auth.json
+
+  - name: Ensures main directory exists
+    become: yes
+    become_method: sudo
+    file: path={{ ansistrano_deploy_to }} state=directory
+      mode=u=rwX,g=rwX,o=rX
+      owner={{ magento_owner }} group={{ magento_group }}
+      recurse=yes

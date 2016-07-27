@@ -1,0 +1,7 @@
+- file: path={{ ansistrano_release_path.stdout }}/pub/media state=absent
+
+- file: path={{ ansistrano_shared_path.stdout }}/pub/media state=directory
+
+- file: path={{ ansistrano_release_path.stdout }}/pub/static state=absent
+
+- file: path={{ ansistrano_shared_path.stdout }}/pub/static state=directory

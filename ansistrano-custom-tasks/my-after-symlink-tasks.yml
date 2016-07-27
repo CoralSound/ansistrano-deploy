@@ -1,0 +1,10 @@
+- name: Set 777 permissions for {{ item }}
+  file:
+    path={{ ansistrano_shared_path.stdout }}/{{ item }}
+    mode=u=rwX,g=rwX,o=rwX
+    owner=ansible group=www-pub
+    recurse=yes
+  with_items:
+    - pub
+    - var
+  become: yes

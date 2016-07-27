@@ -1,0 +1,52 @@
+- composer:
+    command: update
+    working_dir: "{{ ansistrano_release_path.stdout }}"
+
+- name: Make sure folder exists
+  file: path={{ ansistrano_release_path.stdout }}/app/etc state=directory
+
+- name: upload env.php with changed variables
+  template: src=ansistrano-custom-tasks/templates/env.php.j2 dest={{ ansistrano_release_path.stdout }}/app/etc/env.php
+
+- name: magento 'setup:upgrade'
+  command: php {{ansistrano_release_path.stdout}}/bin/magento setup:upgrade
+
+- name: magento 'setup:di:compile'
+  command: php {{ ansistrano_release_path.stdout }}/bin/magento setup:di:compile
+
+- name: magento 'setup:static-content:deploy'
+  command: php {{ansistrano_release_path.stdout}}/bin/magento setup:static-content:deploy
+
+- name: Set 777 permissions for {{ item }}
+  file:
+    path={{ ansistrano_release_path.stdout }}/{{ item }}
+    mode=u=rwX,g=rwX,o=rwX
+    owner={{ magento_owner }} group={{ magento_group }}
+    recurse=yes
+  with_items:
+    - var
+    - pub
+  become: yes
+
+- name: setup cron for magento - step 1
+  cron: name="step 1"
+        user="ansible"
+        minute="*/1"
+        job='php -c /etc/php/7.0/cli/php.ini {{ magento_path }}/bin/magento cron:run | grep -v "Ran jobs by schedule" >> {{ magento_path }}/var/log/magento.cron.log'
+
+- name: setup cron for magento - step 2
+  cron: name="step 2"
+        user="ansible"
+        minute="*/1"
+        job='php -c /etc/php/7.0/cli/php.ini {{ magento_path }}/bin/magento setup:cron:run >> {{ magento_path }}/var/log/setup.cron.log'
+
+- name: Set 777 permissions for {{ item }}
+  file:
+    path={{ ansistrano_release_path.stdout }}/{{ item }}
+    mode=u=rwX,g=rwX,o=rwX
+    owner={{ magento_owner }} group={{ magento_group }}
+    recurse=yes
+  with_items:
+    - var
+    - pub
+  become: yes
