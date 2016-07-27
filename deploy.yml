@@ -1,24 +1,14 @@
 ---
-- hosts: "{{ hosts }}"
-# - hosts: web-magento-servers
-# - hosts: magento-throwaway-servers
-  # become: no
-  # become_method: sudo
+- hosts: web-magento-servers
 
   vars_files:
     - vars/carlosbuenosvinos.ansistrano-deploy/main.yml
 
-  vars:
-    code_directory: /home/vagrant/sites_local/www.magentopm.dev/magento2/current
-
   roles:
-    # - x-magento2-existing
     - role: carlosbuenosvinos.ansistrano-deploy
       become: no
-    # - role: x-magento2-syncdb
 
   pre_tasks:
-
   - name: Ensures composer home directory exists
     become: no
     file: path=.composer state=directory

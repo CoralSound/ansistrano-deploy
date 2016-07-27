@@ -1,45 +1,75 @@
 ---
-ansistrano_deploy_from: "{{ playbook_dir }}" # Where my local project is (relative or absolute path)
-# ansistrano_deploy_to: "/srv/www/magento2" # Base path to deploy to.
-ansistrano_version_dir: "releases" # Releases folder name
-ansistrano_current_dir: "current" # Softlink name. You should rarely changed it.
-ansistrano_current_via: "symlink" # Deployment strategy who code should be deployed to current path. Options are symlink or rsync
+# Path where the code to deploy is
+ansistrano_deploy_from: "{{ playbook_dir }}"
+
+# Path where the code must be deployed to
+# ansistrano_deploy_to: "/var/www/my-app"
+ansistrano_deploy_to: "/srv/www/magento2/" # Base path to deploy to.
+magento_path: "{{ ansistrano_deploy_to }}{{ ansistrano_current_dir}}"
+magento_owner: ansible
+magento_group: www-pub
+
+magento_env:
+  backend_frontName: <enter_chosen_admin_directory> #admin
+  crypt_key: <enter_crypt_key>
+  session_save: db
+  db_table_prefix:
+  mage_mode: production
+  mysql_host:  <mysql_host_ip_or_endpoint>
+  mysql_dbname: <enter_mysql_dbname>
+  mysql_username: <enter_username>
+  mysql_password: <enter_password>
+
+
+# Folder name for the releases
+ansistrano_version_dir: "releases"
+
+# Softlink name for the current release
+ansistrano_current_dir: "current"
+
+# Current directory deployment strategy
+ansistrano_current_via: "symlink"
+
+# Shared paths to symlink to release dir
+# ansistrano_shared_paths: []
 ansistrano_shared_paths: # Shared paths to symlink to release dir
   - pub/media
+  - pub/static
 
-ansistrano_keep_releases: 0 # Releases to keep after a new deployment. See "Pruning old releases".
-ansistrano_deploy_via: "git" # Method used to deliver the code to the server. Options are copy, rsync, git, s3 or download.
-ansistrano_allow_anonymous_stats: no
+# Shared files to symlink to release dir
+ansistrano_shared_files: []
 
-# Variables used in the rsync deployment strategy
-ansistrano_rsync_extra_params: "" # Extra parameters to use when deploying with rsync in a single string. Although Ansible allows an array this can cause problems if we try to add multiple --include args as it was reported in https://github.com/ansistrano/deploy/commit/e98942dc969d4e620313f00f003a7ea2eab67e86
-ansistrano_rsync_set_remote_user: yes # See [ansible synchronize module](http://docs.ansible.com/ansible/synchronize_module.html). Options are yes, no.
+# Number of releases to keep in your hosts, if 0, unlimited releases will be kept
+ansistrano_keep_releases: 0
 
-# Variables used in the Git deployment strategy
-# ansistrano_git_repo: keyur@keyur.com:keyurshah/ahkbook.git # Location of the git repository
-ansistrano_git_repo: git@github.com:keyurshah/magento2.git # Location of the git repository
-ansistrano_git_branch: build # What version of the repository to check out. This can be the full 40-character SHA-1 hash, the literal string HEAD, a branch name, or a tag name
-# ansistrano_git_identity_key_path: "" # If specified this file is copied over and used as the identity key for the git commands, path is relative to the playbook in which it is used
+# Deployment strategies variables
 
-# Variables used in the download deployment strategy
-# ansistrano_get_url: https://github.com/someproject/somearchive.tar.gz
+# Due to runtime variable evaluation, the ansistrano_deploy_via default is actually
+# defined in update-code.yml instead of this file. You can still override it in your
+# playbook as needed.
+# ansistrano_deploy_via: "rsync"
 
-# Variables used in the S3 deployment strategy
+## GIT pull strategy
+ansistrano_git_repo: git@github.com:USERNAME/REPO.git
+ansistrano_git_branch: master
+ansistrano_git_repo_tree: ""
+ansistrano_git_identity_key_path: ""
+
+## RSYNC push strategy
+ansistrano_rsync_extra_params: ""
+## put user@ for the remote paths. If you have a custom ssh config to define
+## the remote user for a host that does not match the inventory user,
+## you should set this parameter to "no".
+ansistrano_rsync_set_remote_user: yes
+
+## Download strategy
+ansistrano_get_url: https://github.com/someproject/somearchive.tar.gz
+
+## S3 get strategy
 ansistrano_s3_bucket: s3bucket
-ansistrano_s3_object: s3object.tgz # Add the _unarchive suffix to the ansistrano_deploy_via if your object is a package (ie: s3_unarchive)
+ansistrano_s3_object: s3object.tgz
 ansistrano_s3_region: eu-west-1
-# Optional variables, omitted by default
-ansistrano_s3_aws_access_key: YOUR_AWS_ACCESS_KEY
-ansistrano_s3_aws_secret_key: YOUR_AWS_SECRET_KEY
 
-# Hooks: custom tasks if you need them
-# ansistrano_before_setup_tasks_file: "{{ playbook_dir }}/<your-deployment-config>/my-before-setup-tasks.yml"
-# ansistrano_after_setup_tasks_file: "{{ playbook_dir }}/<your-deployment-config>/my-after-setup-tasks.yml"
-# ansistrano_before_update_code_tasks_file: "{{ playbook_dir }}/<your-deployment-config>/my-before-update-code-tasks.yml"
-ansistrano_after_update_code_tasks_file: "{{ playbook_dir }}/ansistrano-custom-tasks/my-after-update-code-tasks.yml"
-ansistrano_before_symlink_shared_tasks_file: "{{ playbook_dir }}/ansistrano-custom-tasks/my-before-symlink-shared-tasks.yml"
-# ansistrano_after_symlink_shared_tasks_file: "{{ playbook_dir }}/<your-deployment-config>/my-after-symlink-shared-tasks.yml"
-# ansistrano_before_symlink_tasks_file: "{{ playbook_dir }}/<your-deployment-config>/my-before-symlink-tasks.yml"
-ansistrano_after_symlink_tasks_file: "{{ playbook_dir }}/ansistrano-custom-tasks/my-after-symlink-tasks.yml"
-# ansistrano_before_cleanup_tasks_file: "{{ playbook_dir }}/<your-deployment-config>/my-before-cleanup-tasks.yml"
-  # ansistrano_after_cleanup_tasks_file: "{{ playbook_dir }}/<your-deployment-config>/my-after-cleanup-tasks.yml"
+## Sends anonymous stats to the www.ansistrano.com servers
+## You can disallow it by just setting this parameter to "no" in your playbook
+ansistrano_allow_anonymous_stats: yes
